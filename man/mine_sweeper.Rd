@@ -20,7 +20,8 @@ printed}
 }
 \description{
 The controls should be familiar to you: Click the left mouse button to dig in
-an area, and right button to mark or unmark the area with flags.
+an area, and right button to mark or unmark the area with flags. To mark
+with a provisory flag, scroll up or down with mouse or trackpad.
 }
 \note{
 Linux/Mac users have to use \code{X11(type = 'Xlib')} or the Cairo

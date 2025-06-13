@@ -1,7 +1,8 @@
 #' Play the Mine Sweeper game in R
 #'
 #' The controls should be familiar to you: Click the left mouse button to dig in
-#' an area, and right button to mark or unmark the area with flags.
+#' an area, and right button to mark or unmark the area with flags. To mark
+#' with a provisory flag, scroll up or down with mouse or trackpad.
 #' @param width number of grids in horizontal axis
 #' @param height number of grids in vertical axis
 #' @param mines number of mines
@@ -37,7 +38,7 @@ mine_sweeper <- function(width = 10, height = 10, mines = 20, cheat = FALSE, see
   mines <- floor(mines)
 
   m <- rep(0, width * height)
-  # Status: 0 for untested areas, 1 for tested areas, 2 for flags
+  # Status: 0 for untested areas, 1 for tested areas, 2 for flags, 3 for provisory flags
   mat.status <- matrix(m, height, width)
   mine.index <- sample(width * height, mines)
   m[mine.index] <- -10
@@ -56,7 +57,8 @@ mine_sweeper <- function(width = 10, height = 10, mines = 20, cheat = FALSE, see
   if (cheat) print(mine.mat)
 
   # Plot a grid
-  plot.grid <- function(x, y, w = 1, h = 1, col1 = "#D6E3F0", col2 = "#92B0CA", slices = 10) {
+  plot.grid <- function(x, y, w = 1, h = 1, col1 = "#D6E3F0", col2 = "#92B0CA",
+                        slices = 10, sleep = 0) {
     # Generate contiguous colors
     f <- colorRampPalette(c(col1, col2))
     cols <- f(slices)
@@ -86,6 +88,8 @@ mine_sweeper <- function(width = 10, height = 10, mines = 20, cheat = FALSE, see
     # Border
     polygon(x + c(-0.5, -0.5, 0.5, 0.5) * w, y + c(-0.5, 0.5, 0.5, -0.5) * h,
             border = "#777777")
+    # Pause to avoid repeated switching the provisory flags when scrolling
+    Sys.sleep(sleep)
   }
 
   # Plot the interface
@@ -151,6 +155,16 @@ mine_sweeper <- function(width = 10, height = 10, mines = 20, cheat = FALSE, see
             inches = FALSE, fg = "black", bg = "black", add = TRUE)
     segments(x - 0.1, y + 0.3, x - 0.1, y - 0.2)
   }
+  plot.pflag <- function(x, y, sleep = 0) {
+    symbols(x + 0.075, y + 0.2,
+            rectangles = matrix(rep(c(0.35, 0.2), rep(length(x), 2)), ncol = 2),
+            inches = FALSE, fg = "yellow", bg = "yellow", add = TRUE)
+    symbols(x, y - 0.25,
+            rectangles = matrix(rep(c(0.6, 0.1), rep(length(x), 2)), ncol = 2),
+            inches = FALSE, fg = "gray", bg = "gray", add = TRUE)
+    segments(x - 0.1, y + 0.3, x - 0.1, y - 0.2)
+    Sys.sleep(sleep)
+  }
   search.zeroes <- function(pos, mat) {
     nr <- nrow(mat)
     nc <- ncol(mat)
@@ -171,15 +185,16 @@ mine_sweeper <- function(width = 10, height = 10, mines = 20, cheat = FALSE, see
     plx <- round(grconvertX(x, "ndc", "user"))
     ply <- round(grconvertY(y, "ndc", "user"))
     ms <- mat.status
-    if (plx < 1 || plx > width || ply < 1 || ply > height || buttons == 1) {
+    if (plx < 1 || plx > width || ply < 1 || ply > height ||
+        (length(buttons) && buttons == 1)) {
       return(ms)
     }
     current.status <- ms[height + 1 - ply, plx]
     current.mat <- mine.mat[height + 1 - ply, plx]
     ## Left button
-    if (buttons == 0) {
-      ## Untested area
-      if (current.status == 0) {
+    if (length(buttons) && buttons == 0) {
+      ## Untested area / provisory flag
+      if (current.status %in% c(0, 3)) {
         ## Is a mine
         if (current.mat == -1) {
           plot.mine(mine.col, height + 1 - mine.row)
@@ -227,9 +242,9 @@ mine_sweeper <- function(width = 10, height = 10, mines = 20, cheat = FALSE, see
       }
     }
     ## Right button
-    if (buttons == 2) {
-      ## Blank area
-      if (current.status == 0) {
+    if (length(buttons) && buttons == 2) {
+      ## Blank area / provisory flag
+      if (current.status %in% c(0, 3)) {
         ms[height + 1 - ply, plx] <- 2
         plot.flag(plx, ply)
         return(ms)
@@ -243,6 +258,22 @@ mine_sweeper <- function(width = 10, height = 10, mines = 20, cheat = FALSE, see
         return(ms)
       }
     }
+    # Scroll up/down
+    if (length(buttons) == 0) {
+      # Blank or flag
+      if (current.status %in% c(0, 2)) {
+        ms[height + 1 - ply, plx] <- 3
+        plot.pflag(plx, ply, sleep = .7)
+        return(ms)
+      # Provisory flag
+      } else if (current.status == 3) {
+        ms[height + 1 - ply, plx] <- 0
+        plot.grid(plx, ply, sleep = .7)
+        return(ms)
+      }
+      return(ms)
+    }
+
     return(ms)
   }
 
