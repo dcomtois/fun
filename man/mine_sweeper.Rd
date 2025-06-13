@@ -4,7 +4,7 @@
 \alias{mine_sweeper}
 \title{Play the Mine Sweeper game in R}
 \usage{
-mine_sweeper(width = 10, height = 10, mines = 20, cheat = FALSE)
+mine_sweeper(width = 10, height = 10, mines = 20, cheat = FALSE, seed = NULL)
 }
 \arguments{
 \item{width}{number of grids in horizontal axis}
@@ -15,6 +15,8 @@ mine_sweeper(width = 10, height = 10, mines = 20, cheat = FALSE)
 
 \item{cheat}{logical. If \code{TRUE} a matrix indicating the mines will be
 printed}
+
+\item{seed}{numeric. Seed to use for randomization (optional)}
 }
 \description{
 The controls should be familiar to you: Click the left mouse button to dig in

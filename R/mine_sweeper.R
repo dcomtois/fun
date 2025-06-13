@@ -7,6 +7,7 @@
 #' @param mines number of mines
 #' @param cheat logical. If \code{TRUE} a matrix indicating the mines will be
 #'   printed
+#' @param seed numeric. Seed to use for randomization (optional)
 #' @author Yixuan Qiu \email{yixuan.qiu@@cos.name}
 #' @note Linux/Mac users have to use \code{X11(type = 'Xlib')} or the Cairo
 #'   graphics device \code{Cairo()} in the package \pkg{cairoDevice}.
@@ -18,7 +19,7 @@
 #'   if (.Platform$OS.type == 'windows') x11() else x11(type = 'Xlib')
 #'   mine_sweeper()
 #' }
-mine_sweeper <- function(width = 10, height = 10, mines = 20, cheat = FALSE) {
+mine_sweeper <- function(width = 10, height = 10, mines = 20, cheat = FALSE, seed = NULL) {
   # Deal with some exceptions
   if (!interactive()) return()
   if (mines >= width * height) {
@@ -27,6 +28,10 @@ mine_sweeper <- function(width = 10, height = 10, mines = 20, cheat = FALSE) {
   if (width <= 0 | height <= 0 | mines <= 0) {
     stop("width, height and mines should be positive!")
   }
+  # Generate / set the seed to allow repeating the game
+  if (missing(seed)) seed <- round(runif(n = 1, min = 10000, max = 99999))
+  set.seed(seed)
+
   width <- floor(width)
   height <- floor(height)
   mines <- floor(mines)
@@ -180,6 +185,7 @@ mine_sweeper <- function(width = 10, height = 10, mines = 20, cheat = FALSE) {
           plot.mine(mine.col, height + 1 - mine.row)
           plot.mine.explode(plx, ply)
           cat("Game Over!\n")
+          cat("To try again, use seed =", seed, "\n")
           return(-1)
           ## Blank area
         } else if (current.mat == 0) {
@@ -209,6 +215,7 @@ mine_sweeper <- function(width = 10, height = 10, mines = 20, cheat = FALSE) {
           if (sum(ms == 1) == width * height - mines -1) {
             plot.flag(mine.col, height + 1 - mine.row)
             cat("You win!\n")
+            cat("Game seed:", seed, "\n")
             return(1)
           }
           ms[height + 1 - ply, plx] <- 1
